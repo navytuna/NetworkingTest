@@ -57,21 +57,14 @@ public class UsageExample {
 		Scanner sc = new Scanner(System.in);
 		while(true) {
 			System.out.println("Input a message");
-			if(sc.hasNextLine()) {message = sc.nextLine();}else {message = "No Input";}
-			if(message.equals("break")) {break;}
+			if(sc.hasNextLine()) {message = sc.nextLine();}else {break;}
 			byte[] messageOut = message.getBytes();
 			clientOut.writeInt(messageOut.length);
 			clientOut.write(messageOut);
 			clientOut.flush();
 			System.out.println("Message sent to server: " + new String(messageOut));
  
-			int length = serverIn.readInt();
-			if (length > 0) {
-				byte[] messageIn = new byte[length];
-				serverIn.readFully(messageIn, 0, messageIn.length);
-				System.out.println("Message received from client: " + new String(messageIn));
-			}
-			
+			serverHandling();
 		}
 		sc.close();
 	}
@@ -97,4 +90,13 @@ public class UsageExample {
 	      byte [] data = bos.toByteArray();
 	      return data;
 	  }
+	
+	public static void serverHandling(){
+		int length = serverIn.readInt();
+		if (length > 0) {
+			byte[] messageIn = new byte[length];
+			serverIn.readFully(messageIn, 0, messageIn.length);
+			System.out.println("Message received from client: " + new String(messageIn));
+		}
+	}
 }
