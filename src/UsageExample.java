@@ -1,7 +1,5 @@
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -30,6 +28,8 @@ public class UsageExample {
     public static DataOutputStream serverOut;
     public static DataInputStream serverIn;
     public static String message;
+    public static int Cmd;
+    public static byte type;
 	
 	public static void main(String[] args) throws Exception {
         serverStartup();
@@ -55,17 +55,31 @@ public class UsageExample {
 	
 	public static void run() throws Exception{
 		Scanner sc = new Scanner(System.in);
-		while(true) {
-			System.out.println("Input a message");
-			if(sc.hasNextLine()) {message = sc.nextLine();}else {break;}
-			byte[] messageOut = message.getBytes();
-			clientOut.writeInt(messageOut.length);
-			clientOut.write(messageOut);
-			clientOut.flush();
-			System.out.println("Message sent to server: " + new String(messageOut));
- 
+		//while(true) {
+			System.out.println("Input a command");
+			if(sc.hasNextLine()) {message = sc.nextLine();}//else {break;}
+			try{
+				Cmd = Integer.parseInt(message);
+				type = 1;
+			}
+			catch(Exception e){
+				type = 0;
+			}
+			if(type == 0) {
+				byte[] messageOut = message.getBytes();
+				clientOut.writeInt(messageOut.length);
+				clientOut.write(messageOut);
+				clientOut.flush();
+				System.out.println("Message sent to server: " + new String(messageOut));
+			}
+			if(type == 1) {
+				clientOut.writeByte(Cmd);
+			}
 			serverHandling();
-		}
+			for(int cnt = 0; cnt < clientIn.readInt(); cnt++) {
+				
+			}
+		//}
 		sc.close();
 	}
 	
@@ -79,24 +93,32 @@ public class UsageExample {
         System.out.println("Server terminated.");
 	}
 	
-	public static byte[] getBytes(Object obj) throws java.io.IOException{
-	      ByteArrayOutputStream bos = new ByteArrayOutputStream(); 
-	      ObjectOutputStream oos = new ObjectOutputStream(bos); 
-	      oos.writeObject(obj);
-	      oos.flush(); 
-	      oos.close();
-	      bos.flush();
-	      bos.close();
-	      byte [] data = bos.toByteArray();
-	      return data;
-	  }
 	
-	public static void serverHandling(){
-		int length = serverIn.readInt();
-		if (length > 0) {
-			byte[] messageIn = new byte[length];
-			serverIn.readFully(messageIn, 0, messageIn.length);
-			System.out.println("Message received from client: " + new String(messageIn));
+	public static void serverHandling() throws Exception{
+		if(type == 0) {
+			int length = serverIn.readInt();
+			if (length > 0) {
+				byte[] messageIn = new byte[length];
+				serverIn.readFully(messageIn, 0, messageIn.length);
+				System.out.println("Message received from client: " + new String(messageIn));
+			}
+		}
+		if(type == 1) {
+			int cmdIn = serverIn.readByte();
+			if(cmdIn == 1) {
+				byte[] messageOut = server.toString().getBytes();
+				serverOut.writeInt(messageOut.length);
+				serverOut.write(messageOut);
+				serverOut.flush();
+			}
+			if(cmdIn == 2) {
+				serverOut.writeBytes("b");
+				serverOut.flush();
+			}
+			else {
+				serverOut.writeBytes("e");
+				serverOut.flush();
+			}
 		}
 	}
 }
