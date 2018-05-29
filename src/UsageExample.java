@@ -34,7 +34,6 @@ public class UsageExample {
 	public static void main(String[] args) throws Exception {
         serverStartup();
         run();
-        serverShutdown();
     }
 	
 	public static void serverStartup() throws Exception{
@@ -55,31 +54,16 @@ public class UsageExample {
 	
 	public static void run() throws Exception{
 		Scanner sc = new Scanner(System.in);
-		//while(true) {
+		while(!(server.isClosed())) {
 			System.out.println("Input a command");
-			if(sc.hasNextLine()) {message = sc.nextLine();}//else {break;}
-			try{
-				Cmd = Integer.parseInt(message);
-				type = 1;
-			}
-			catch(Exception e){
-				type = 0;
-			}
-			if(type == 0) {
-				byte[] messageOut = message.getBytes();
-				clientOut.writeInt(messageOut.length);
-				clientOut.write(messageOut);
-				clientOut.flush();
-				System.out.println("Message sent to server: " + new String(messageOut));
-			}
-			if(type == 1) {
-				clientOut.writeByte(Cmd);
-			}
+			if(sc.hasNextLine()) {message = sc.nextLine();}else {break;}
+			byte[] messageOut = message.getBytes();
+			clientOut.writeInt(messageOut.length);
+			clientOut.write(messageOut);
+			clientOut.flush();
 			serverHandling();
-			for(int cnt = 0; cnt < clientIn.readInt(); cnt++) {
-				
-			}
-		//}
+			clientHandling();
+		}
 		sc.close();
 	}
 	
@@ -95,30 +79,21 @@ public class UsageExample {
 	
 	
 	public static void serverHandling() throws Exception{
-		if(type == 0) {
-			int length = serverIn.readInt();
-			if (length > 0) {
-				byte[] messageIn = new byte[length];
-				serverIn.readFully(messageIn, 0, messageIn.length);
-				System.out.println("Message received from client: " + new String(messageIn));
-			}
+		int length = serverIn.readInt();
+		String command = null;
+		if (length > 0) {
+			byte[] messageIn = new byte[length];
+			serverIn.readFully(messageIn, 0, messageIn.length);
+			command = new String(messageIn);
+		}else {
+			System.out.println("Message is not long enough somehow");
 		}
-		if(type == 1) {
-			int cmdIn = serverIn.readByte();
-			if(cmdIn == 1) {
-				byte[] messageOut = server.toString().getBytes();
-				serverOut.writeInt(messageOut.length);
-				serverOut.write(messageOut);
-				serverOut.flush();
-			}
-			if(cmdIn == 2) {
-				serverOut.writeBytes("b");
-				serverOut.flush();
-			}
-			else {
-				serverOut.writeBytes("e");
-				serverOut.flush();
-			}
-		}
+		if(command.equals("ping")) {System.out.println("pong");}
+		if(command.equals("shutdown")) {serverShutdown();}
+		if(command.equals("help")) {/*Command Array as objects?*/}
+	}
+	
+	public static void clientHandling() throws Exception{
+		
 	}
 }
